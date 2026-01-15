@@ -133,4 +133,56 @@
 
         </div>
     </div>
+
+    <h2>Créer un tableau vierge</h2>
+
+<form method="POST" action="{{ route('tableaux.store') }}">
+    @csrf
+    <div>
+        <label>Nom du tableau :</label>
+        <input type="text" name="name" placeholder="Nom du tableau" required>
+    </div>
+
+    <div>
+        <label>Nombre de colonnes :</label>
+        <input type="number" id="nbColumns" min="1" value="3" required>
+    </div>
+
+    <div>
+        <label>Nombre de lignes :</label>
+        <input type="number" name="rows" min="1" value="3" required>
+    </div>
+
+    <div id="columnsContainer"></div>
+
+    <button type="submit">Créer le tableau</button>
+</form>
+
+<script>
+    const nbColumnsInput = document.getElementById('nbColumns');
+    const columnsContainer = document.getElementById('columnsContainer');
+
+    function generateColumns() {
+        const count = nbColumnsInput.value;
+        columnsContainer.innerHTML = '';
+        for(let i = 0; i < count; i++) {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label>Nom colonne ${i+1} :</label>
+                <input type="text" name="columns[${i}][name]" placeholder="Nouvelle colonne">
+                <label>Type :</label>
+                <select name="columns[${i}][type]">
+                    <option value="text">Texte</option>
+                    <option value="number">Numéro</option>
+                    <option value="checkbox">Checkbox</option>
+                </select>
+            `;
+            columnsContainer.appendChild(div);
+        }
+    }
+
+    nbColumnsInput.addEventListener('input', generateColumns);
+    generateColumns();
+</script>
+
 </x-app-layout>
