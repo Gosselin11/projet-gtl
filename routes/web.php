@@ -4,6 +4,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TableController;
 
 // Routes protégées (authentification requise)
 Route::middleware('auth')->group(function () {
@@ -30,6 +31,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])
     ->name('users.destroy');
+
+    // Tableau dynamique
+
+    Route::get('/dashboard/tableaux/create', [TableController::class, 'create'])->name('tableaux.create');
+Route::post('/dashboard/tableaux', [TableController::class, 'store'])->name('tableaux.store');
+Route::get('/dashboard/tableaux/{table}', [TableController::class, 'show'])->name('tableaux.show');
 
 
 
