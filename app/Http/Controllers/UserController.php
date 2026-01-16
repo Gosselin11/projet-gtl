@@ -32,7 +32,7 @@ class UserController extends Controller
      public function store(Request $request)
     {
         // Vérifie que c'est un admin
-        if (!auth()->User()->isAdmin()) {
+        if (!auth()->user()->isAdmin()) {
             abort(403, 'Action non autorisée');
         }
 

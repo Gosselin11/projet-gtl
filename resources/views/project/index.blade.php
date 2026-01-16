@@ -1,90 +1,136 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="dark">
 <head>
     <meta charset="utf-8">
     <title>Suivi projet</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #1a1a1a; color: white; }
-        .card-project { max-width: 900px; background-color: #000; border: 1px solid #333; }
-        input.form-control:focus { background-color: #222; color: white; border-color: #0dcaf0; box-shadow: none; }
-        .table-title-input { font-size: 1.25rem; color: #0dcaf0 !important; font-weight: bold; }
+        /* Couleurs dynamiques basées sur le thème */
+        :root {
+            --card-bg: #000000;
+            --table-custom-bg: #050505;
+        }
+
+        [data-bs-theme="light"] {
+            --card-bg: #ffffff;
+            --table-custom-bg: #f8f9fa;
+        }
+
+        body { transition: background-color 0.3s ease; }
+
+        .card-project {
+            max-width: 900px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--bs-border-color);
+        }
+
+        .custom-table-container {
+            background-color: var(--table-custom-bg);
+            border: 1px solid var(--bs-border-color);
+        }
+
+        /* Focus des champs */
+        .form-control:focus {
+            border-color: #0dcaf0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+        }
+
+        .table-title-input {
+            font-size: 1.25rem;
+            color: #0dcaf0 !important;
+            font-weight: bold;
+        }
+
+        /* Transition fluide pour le changement de thème */
+        * { transition: background-color 0.2s ease, color 0.1s ease; }
     </style>
 </head>
 <body class="p-4">
 <div class="container">
 
-    {{-- Menu Administration --}}
-    @if(auth()->check() && auth()->user()->isAdmin())
-        <div class="mb-3 text-end">
-            <a href="{{ route('dashboard') }}" class="btn btn-warning">Tableau de bord</a>
+    <nav class="navbar mb-4">
+        <div class="container-fluid p-0">
+            <h1 class="navbar-brand text-info fw-bold m-0 fs-2">Suivi de projet</h1>
+            <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral">
+                <span class="navbar-toggler-icon"></span>
+            </button>
         </div>
-    @endif
+    </nav>
 
-    <h1 class="mb-4 text-info">Suivi de projet</h1>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title text-info">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="d-grid gap-3">
+                <form method="POST" action="{{ route('project.store') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-primary w-100">+ Nouveau projet</button>
+                </form>
 
-    <div class="mb-4 d-flex justify-content-between align-items-center">
-        {{-- Bouton Créer un nouveau dossier client --}}
-        <form method="POST" action="{{ route('project.store') }}">
-            @csrf
-            <button type="submit" class="btn btn-primary btn-lg">Ajouter un projet</button>
-        </form>
+                @if(auth()->check() && auth()->user()->isAdmin())
+                    <a href="{{ route('dashboard') }}" class="btn btn-warning w-100">Tableau de bord</a>
+                @endif
 
-        {{-- Bouton Déconnexion --}}
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="btn btn-secondary btn-lg">Déconnexion</button>
-        </form>
+                <hr>
+
+                <div class="mb-3 text-center">
+                    <label class="form-label small text-uppercase fw-bold opacity-50">Apparence</label>
+                    <div class="btn-group w-100 shadow-sm">
+                        <button class="btn btn-outline-secondary" onclick="setTheme('light')">Clair</button>
+                        <button class="btn btn-outline-info" onclick="setTheme('dark')">Sombre</button>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger w-100">Déconnexion</button>
+                </form>
+            </div>
+        </div>
     </div>
 
-    {{-- Messages Flash --}}
     @if (session('status'))
-        <div id="flash-message" class="alert alert-success">
+        <div id="flash-message" class="alert alert-success shadow-sm">
             {{ session('status') }}
         </div>
     @endif
 
-    {{-- Liste des projets --}}
     @foreach($projects as $project)
         <div class="mb-5 p-4 rounded mx-auto card-project shadow-lg">
 
-            {{-- Barre d'outils interne au projet --}}
-            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
-                <h3 class="h5 m-0 text-uppercase text-secondary">Options du dossier</h3>
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                <h3 class="h6 m-0 text-uppercase text-secondary fw-bold">Options du dossier</h3>
                 <div class="d-flex gap-2">
-                    {{-- Bouton pour ajouter le tableau fixe --}}
                     @if($project->tasks->count() == 0)
                         <form action="{{ route('table.addFixed', $project) }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-success">+ Étapes Fixes</button>
+                            <button type="submit" class="btn btn-sm btn-outline-success">+ Fixes</button>
                         </form>
                     @endif
-                    {{-- Bouton pour ajouter un nouveau tableau dynamique --}}
                     <form action="{{ route('table.addCustom', $project) }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-primary">+ Tableau Vide</button>
+                        <button type="submit" class="btn btn-sm btn-outline-primary">+ Vide</button>
                     </form>
                 </div>
             </div>
 
             <form action="{{ route('project.save', $project) }}" method="POST">
                 @csrf
-
-                {{-- Nom du client --}}
                 <div class="mb-4">
-                    <label class="form-label text-success fw-bold small text-uppercase">Nom de l’entreprise / client</label>
-                    <input type="text" name="client" class="form-control bg-dark text-white border-secondary" value="{{ $project->client }}">
+                    <label class="form-label text-success fw-bold small text-uppercase">Client / Entreprise</label>
+                    <input type="text" name="client" class="form-control" value="{{ $project->client }}">
                 </div>
 
-                {{-- AFFICHAGE DU TABLEAU FIXE (si existant) --}}
                 @if($project->tasks->count() > 0)
-                    <h5 class="text-white mb-2 small text-uppercase">Étapes de production</h5>
-                    <table class="table table-bordered align-middle table-dark mb-4">
-                        <thead>
-                            <tr class="table-active">
-                                <th class="text-center">Tâche</th>
-                                <th class="text-center" style="width: 100px;">À faire</th>
-                                <th class="text-center" style="width: 100px;">Fait</th>
+                    <h5 class="mb-2 small text-uppercase opacity-75">Étapes de production</h5>
+                    <table class="table table-bordered align-middle mb-4 shadow-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tâche</th>
+                                <th class="text-center" style="width: 80px;">À faire</th>
+                                <th class="text-center" style="width: 80px;">Fait</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -103,28 +149,26 @@
                     </table>
                 @endif
 
-                {{-- AFFICHAGE DES TABLEAUX DYNAMIQUES --}}
                 @foreach($project->tables as $table)
-                    <div class="mt-4 p-3 border border-secondary rounded bg-black">
+                    <div class="mt-4 p-3 rounded custom-table-container shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            {{-- Input pour renommer le titre du tableau --}}
                             <input type="text" name="table_name[{{ $table->id }}]" value="{{ $table->name }}"
-                                   class="form-control bg-transparent border-0 table-title-input w-50" placeholder="Nom du tableau">
+                                   class="form-control bg-transparent border-0 table-title-input w-50">
 
-                            <div class="btn-group shadow-sm">
+                            <div class="btn-group">
                                 <a href="{{ route('column.add', [$table, 'string']) }}" class="btn btn-sm btn-outline-info">+ Texte</a>
                                 <a href="{{ route('column.add', [$table, 'checkbox']) }}" class="btn btn-sm btn-outline-warning">+ Checkbox</a>
                             </div>
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-dark table-bordered m-0">
-                                <thead>
-                                    <tr class="table-active">
+                            <table class="table table-bordered m-0 align-middle">
+                                <thead class="table-secondary bg-opacity-10">
+                                    <tr>
                                         @foreach($table->columns as $column)
-                                            <th class="text-center p-0">
+                                            <th class="p-0 border-bottom-0">
                                                 <input type="text" name="col_name[{{ $column->id }}]" value="{{ $column->name }}"
-                                                       class="form-control form-control-sm bg-transparent text-white border-0 text-center fw-bold py-2">
+                                                       class="form-control form-control-sm bg-transparent border-0 text-center fw-bold py-2 shadow-none">
                                             </th>
                                         @endforeach
                                     </tr>
@@ -133,19 +177,16 @@
                                     @for($i = 0; $i < ($table->rows_count ?? 3); $i++)
                                         <tr>
                                             @foreach($table->columns as $column)
-                                                @php
-                                                    $cell = $column->cells()->where('row_index', $i)->first();
-                                                @endphp
-                                                <td class="text-center align-middle p-1">
+                                                @php $cell = $column->cells()->where('row_index', $i)->first(); @endphp
+                                                <td class="text-center p-1">
                                                     @if($column->type == 'checkbox')
                                                         <input type="hidden" name="cells[{{ $column->id }}][{{ $i }}]" value="0">
                                                         <input type="checkbox" name="cells[{{ $column->id }}][{{ $i }}]" value="1"
-                                                               class="form-check-input"
-                                                               {{ ($cell && $cell->value == '1') ? 'checked' : '' }}>
+                                                               class="form-check-input" {{ ($cell && $cell->value == '1') ? 'checked' : '' }}>
                                                     @else
                                                         <input type="text" name="cells[{{ $column->id }}][{{ $i }}]"
                                                                value="{{ $cell->value ?? '' }}"
-                                                               class="form-control form-control-sm bg-transparent text-white border-0 shadow-none">
+                                                               class="form-control form-control-sm bg-transparent border-0 shadow-none text-center">
                                                     @endif
                                                 </td>
                                             @endforeach
@@ -156,25 +197,23 @@
                         </div>
 
                         <div class="d-flex justify-content-between mt-3">
-                            <a href="{{ route('row.add', $table) }}" class="btn btn-sm btn-outline-success">+ Ajouter Ligne</a>
-
+                            <a href="{{ route('row.add', $table) }}" class="btn btn-xs text-success border-0 small">+ Ligne</a>
                             @if(auth()->user()->isAdmin())
-                                <button type="button" class="btn btn-sm btn-outline-danger delete-table-btn" data-url="{{ route('table.destroy', $table) }}">
-                                    Supprimer Tableau
+                                <button type="button" class="btn btn-xs text-danger border-0 small delete-table-btn" data-url="{{ route('table.destroy', $table) }}">
+                                    Supprimer
                                 </button>
                             @endif
                         </div>
                     </div>
                 @endforeach
 
-                {{-- Actions du projet --}}
                 <div class="d-flex justify-content-end mt-4 gap-2">
                     @if(auth()->user() && auth()->user()->isAdmin())
                         <button type="button" class="btn btn-outline-danger btn-sm delete-btn" data-action="{{ route('project.destroy', $project) }}">
                             Supprimer Dossier
                         </button>
                     @endif
-                    <button type="submit" class="btn btn-success px-5 fw-bold text-uppercase">Enregistrer</button>
+                    <button type="submit" class="btn btn-success px-5 fw-bold shadow">ENREGISTRER</button>
                 </div>
             </form>
         </div>
@@ -182,44 +221,54 @@
 
 </div>
 
-{{-- Script JS --}}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    // 1. GESTION DU THÈME
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
 
-    // Suppression (Projet ou Tableau)
-    const genericForm = document.getElementById('delete-generic-form');
+    // Charger le thème au démarrage
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
 
-    document.querySelectorAll('.delete-btn, .delete-table-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const msg = this.classList.contains('delete-btn') ? 'Supprimer tout le dossier projet ?' : 'Supprimer ce tableau ?';
-            if (confirm(msg)) {
-                genericForm.action = this.dataset.action || this.dataset.url;
-                genericForm.submit();
+    // 2. LOGIQUE DES PROJETS
+    document.addEventListener('DOMContentLoaded', function () {
+        const genericForm = document.getElementById('delete-generic-form');
+
+        // Suppressions
+        document.querySelectorAll('.delete-btn, .delete-table-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const msg = this.classList.contains('delete-btn') ? 'Supprimer tout le dossier ?' : 'Supprimer ce tableau ?';
+                if (confirm(msg)) {
+                    genericForm.action = this.dataset.action || this.dataset.url;
+                    genericForm.submit();
+                }
+            });
+        });
+
+        // Sync Checkboxes Fixes
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const todo = row.querySelector('.todo-checkbox');
+            const done = row.querySelector('.done-checkbox');
+            if (todo && done) {
+                const sync = () => {
+                    todo.disabled = done.checked;
+                    if (done.checked) todo.checked = false;
+                };
+                done.addEventListener('change', sync);
+                sync();
             }
         });
-    });
 
-    // Sync Tâches Fixes
-    document.querySelectorAll('tbody tr').forEach(row => {
-        const todo = row.querySelector('.todo-checkbox');
-        const done = row.querySelector('.done-checkbox');
-        if (todo && done) {
-            const sync = () => {
-                todo.disabled = done.checked;
-                if (done.checked) todo.checked = false;
-            };
-            done.addEventListener('change', sync);
-            sync();
-        }
+        // Flash Messages
+        const flash = document.getElementById('flash-message');
+        if (flash) setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 3000);
     });
-
-    // Auto-hide messages flash
-    const flash = document.getElementById('flash-message');
-    if (flash) setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 3000);
-});
 </script>
 
-{{-- Formulaire de suppression unique --}}
 <form id="delete-generic-form" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
