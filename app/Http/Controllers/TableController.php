@@ -23,7 +23,7 @@ class TableController extends Controller
 
         $table = Table::create([
             'name' => $request->name,
-            'project_id' => auth()->user()->id,
+            'project_id' => $request->project_id,
         ]);
 
         foreach ($request->columns as $index => $col) {
@@ -51,7 +51,9 @@ class TableController extends Controller
             }
         }
 
-        return redirect()->route('tableaux.show', $table)->with('success', 'Tableau créé !');
+        return redirect()
+    ->route('project.index')
+    ->with('success', 'Tableau créé avec succès');
     }
 
     public function show(Table $table) {

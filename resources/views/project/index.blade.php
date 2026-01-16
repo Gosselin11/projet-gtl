@@ -95,6 +95,76 @@
                         @endforeach
                     </tbody>
                 </table>
+@if($project->tables->where(fn($t) => $t->rows->count() > 0)->count())
+
+    <h5 class="text-success mt-4">
+        Tableaux remplis
+    </h5>
+
+    @foreach($project->tables as $table)
+        @if($table->rows->count() > 0)
+
+            <div class="mb-4 p-3 border rounded"
+                 style="background-color:#0b2e13; color:#fff;">
+
+                <strong>{{ $table->name }}</strong>
+
+                <table class="table table-bordered mt-2 text-white">
+                    <thead>
+                        <tr>
+                            @foreach($table->columns as $column)
+                                <th class="text-center">
+                                    {{ $column->name }}
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                </table>
+
+            </div>
+
+        @endif
+    @endforeach
+@endif
+{{-- TABLEAUX DYNAMIQUES DU PROJET --}}
+@if($project->tables->where(fn($t) => $t->rows->count() === 0)->count())
+
+    <h5 class="text-info mt-4 mb-2">
+        Tableaux du projet
+    </h5>
+
+    @foreach($project->tables as $table)
+
+        <div class="mb-4 p-3 border rounded"
+             style="background-color:#111; color:#fff;">
+
+            <strong class="text-warning">
+                {{ $table->name }}
+            </strong>
+
+            <table class="table table-bordered mt-2 text-white">
+                <thead>
+                    <tr>
+                        @foreach($table->columns as $column)
+                            <th class="text-center">
+                                {{ $column->name }}
+                            </th>
+                        @endforeach
+                    </tr>
+                </thead>
+            </table>
+
+        </div>
+
+    @endforeach
+
+@else
+    <p class="text-muted mt-3">
+        Aucun tableau dynamique pour ce projet.
+    </p>
+@endif
+
+
 
                 <div class="d-flex justify-content-end mt-3 gap-2">
 

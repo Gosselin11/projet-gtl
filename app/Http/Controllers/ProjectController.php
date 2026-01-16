@@ -11,7 +11,7 @@ class ProjectController extends Controller
     // 🔹 Affichage des projets
     public function index()
     {
-        $projects = Project::with('tasks')
+        $projects = Project::with('tasks', 'tables.columns', 'tables.rows')
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -134,29 +134,61 @@
         </div>
     </div>
 
-    <h2>Créer un tableau vierge</h2>
+   <div class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg mt-6">
+    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+        Créer un tableau vierge
+    </h3>
 
-<form method="POST" action="{{ route('tableaux.store') }}">
-    @csrf
-    <div>
-        <label>Nom du tableau :</label>
-        <input type="text" name="name" placeholder="Nom du tableau" required>
-    </div>
+    <form method="POST" action="{{ route('tableaux.store') }}" class="space-y-4">
+        @csrf
 
-    <div>
-        <label>Nombre de colonnes :</label>
-        <input type="number" id="nbColumns" min="1" value="3" required>
-    </div>
 
-    <div>
-        <label>Nombre de lignes :</label>
-        <input type="number" name="rows" min="1" value="3" required>
-    </div>
 
-    <div id="columnsContainer"></div>
+        {{-- Nom du tableau --}}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Nom du tableau
+            </label>
+            <input type="text" name="name" required
+                placeholder="Nom du tableau"
+                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700
+                       dark:bg-gray-900 dark:text-white shadow-sm">
+        </div>
 
-    <button type="submit">Créer le tableau</button>
-</form>
+        {{-- Nombre de colonnes --}}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Nombre de colonnes
+            </label>
+            <input type="number" id="nbColumns" min="1" value="3" required
+                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700
+                       dark:bg-gray-900 dark:text-white shadow-sm">
+        </div>
+
+        {{-- Nombre de lignes --}}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Nombre de lignes
+            </label>
+            <input type="number" name="rows" min="1" value="3" required
+                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700
+                       dark:bg-gray-900 dark:text-white shadow-sm">
+        </div>
+
+        {{-- Colonnes dynamiques --}}
+        <div id="columnsContainer" class="space-y-4"></div>
+
+        {{-- Bouton --}}
+        <div class="pt-4">
+            <button type="submit"
+                class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent
+                       rounded-md font-semibold text-white hover:bg-green-700">
+                Créer le tableau
+            </button>
+        </div>
+    </form>
+</div>
+
 
 <script>
     const nbColumnsInput = document.getElementById('nbColumns');
@@ -165,18 +197,37 @@
     function generateColumns() {
         const count = nbColumnsInput.value;
         columnsContainer.innerHTML = '';
-        for(let i = 0; i < count; i++) {
+
+        for (let i = 0; i < count; i++) {
             const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+
             div.innerHTML = `
-                <label>Nom colonne ${i+1} :</label>
-                <input type="text" name="columns[${i}][name]" placeholder="Nouvelle colonne">
-                <label>Type :</label>
-                <select name="columns[${i}][type]">
-                    <option value="text">Texte</option>
-                    <option value="number">Numéro</option>
-                    <option value="checkbox">Checkbox</option>
-                </select>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Nom colonne ${i + 1}
+                    </label>
+                    <input type="text"
+                        name="columns[${i}][name]"
+                        placeholder="Nouvelle colonne"
+                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700
+                               dark:bg-gray-900 dark:text-white shadow-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Type
+                    </label>
+                    <select name="columns[${i}][type]"
+                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700
+                               dark:bg-gray-900 dark:text-white shadow-sm">
+                        <option value="text">Texte</option>
+                        <option value="number">Numéro</option>
+                        <option value="checkbox">Checkbox</option>
+                    </select>
+                </div>
             `;
+
             columnsContainer.appendChild(div);
         }
     }
@@ -184,5 +235,6 @@
     nbColumnsInput.addEventListener('input', generateColumns);
     generateColumns();
 </script>
+
 
 </x-app-layout>
