@@ -31,7 +31,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy'])
     ->name('users.destroy');
 
-
+    Route::post('/project/{project}/add-table', [ProjectController::class, 'addTable'])->name('table.add');
+Route::get('/table/{table}/add-column/{type}', [ProjectController::class, 'addColumn'])->name('column.add');
+Route::get('/table/{table}/add-row', [ProjectController::class, 'addRow'])->name('row.add');
+Route::delete('/table/{table}', [ProjectController::class, 'destroyTable'])->name('table.destroy');
+Route::post('/project/{project}/add-fixed', [ProjectController::class, 'addFixedTable'])->name('table.addFixed');
+Route::post('/project/{project}/add-custom', [ProjectController::class, 'addCustomTable'])->name('table.addCustom');
 
 });
 
