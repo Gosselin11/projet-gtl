@@ -75,6 +75,61 @@
                 </div>
             </div>
 
+            <div class="mt-8 bg-white p-6 rounded shadow">
+    <h3 class="text-lg font-bold mb-4">Configuration de la Roadmap par défaut</h3>
+
+    <table class="w-full mb-4">
+        <thead>
+            <tr class="text-left border-b">
+                <th class="pb-2">Position</th>
+                <th class="pb-2">Étape</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(\App\Models\TaskTemplate::orderBy('position')->get() as $tmpl)
+                <tr class="border-b">
+                    <td class="py-2">{{ $tmpl->position }}</td>
+                    <td class="py-2">{{ $tmpl->label }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <form action="{{ route('task-templates.store') }}" method="POST" class="flex gap-2">
+        @csrf
+        <input type="number" name="position" placeholder="Pos" class="border rounded p-2 w-20">
+        <input type="text" name="label" placeholder="Nom de l'étape (ex: Brief client)" class="border rounded p-2 flex-1">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Ajouter à la roadmap</button>
+    </form>
+</div>
+
+<table class="w-full mb-4">
+    <thead>
+        <tr class="text-left border-b">
+            <th class="pb-2">Position</th>
+            <th class="pb-2">Étape</th>
+            <th class="pb-2 text-right">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(\App\Models\TaskTemplate::orderBy('position')->get() as $tmpl)
+            <tr class="border-b hover:bg-gray-50">
+                <td class="py-2">{{ $tmpl->position }}</td>
+                <td class="py-2">{{ $tmpl->label }}</td>
+                <td class="py-2 text-right">
+                    <form action="{{ route('task-templates.destroy', $tmpl) }}" method="POST" onsubmit="return confirm('Supprimer cette étape ?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-500 hover:text-red-700 font-bold">
+                            Supprimer
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
         </div>
     </div>
 </x-app-layout>

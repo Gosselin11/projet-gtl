@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Models\TaskTemplate;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Routes protégées (authentification requise)
@@ -38,6 +40,33 @@ Route::delete('/table/{table}', [ProjectController::class, 'destroyTable'])->nam
 Route::post('/project/{project}/add-fixed', [ProjectController::class, 'addFixedTable'])->name('table.addFixed');
 Route::post('/project/{project}/add-custom', [ProjectController::class, 'addCustomTable'])->name('table.addCustom');
 
+// Routes pour les Projets
+Route::middleware('auth')->group(function () {
+    Route::get('/projects', [ProjectController::class, 'index'])->name('project.index');
+    Route::post('/projects', [ProjectController::class, 'store'])->name('project.store');
+    Route::post('/projects/{project}/save', [ProjectController::class, 'save'])->name('project.save');
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('project.destroy');
+
+    // Route pour ajouter une étape à la roadmap globale (Admin seulement)
+    Route::post('/task-templates', function (Request $request) {
+        if (!auth()->user()->isAdmin()) abort(403);
+
+        $request->validate([
+            'label' => 'required|string|max:255',
+            'position' => 'required|integer',
+        ]);
+
+        TaskTemplate::create($request->only('label', 'position'));
+
+        return back()->with('status', 'Étape ajoutée à la roadmap par défaut !');
+    })->name('task-templates.store');
+});
+
+Route::delete('/task-templates/{template}', function (App\Models\TaskTemplate $template) {
+    if (!auth()->user()->isAdmin()) abort(403);
+    $template->delete();
+    return back()->with('status', 'Étape supprimée de la roadmap par défaut.');
+})->name('task-templates.destroy');
 });
 
 // Auth (login, register, logout…)
