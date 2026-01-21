@@ -9,12 +9,14 @@ class Task extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
     protected $fillable = [
         'project_id',
         'label',
         'position',
         'todo',
         'done',
+        'is_roadmap'
     ];
 
     public function project()

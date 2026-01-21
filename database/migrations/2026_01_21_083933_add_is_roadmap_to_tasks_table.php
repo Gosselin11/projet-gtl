@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cells', function (Blueprint $table) {
-            $table->id();
-    $table->foreignId('column_id')->constrained()->onDelete('cascade');
-    $table->integer('row_index');
-    $table->text('value')->nullable();
-    $table->timestamps();
+        Schema::table('tasks', function (Blueprint $table) {
+           $table->boolean('is_roadmap')->default(false)->after('id');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cells');
+        Schema::table('tasks', function (Blueprint $table) {
+            //
+        });
     }
 };

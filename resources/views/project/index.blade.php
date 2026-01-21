@@ -5,19 +5,49 @@
     <title>Suivi projet</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --card-bg: #000000; --table-custom-bg: #050505; }
-        [data-bs-theme="light"] { --card-bg: #ffffff; --table-custom-bg: #f8f9fa; }
+        /* Couleurs dynamiques basées sur le thème */
+        :root {
+            --card-bg: #000000;
+            --table-custom-bg: #050505;
+        }
+
+        [data-bs-theme="light"] {
+            --card-bg: #ffffff;
+            --table-custom-bg: #f8f9fa;
+        }
+
         body { transition: background-color 0.3s ease; }
-        .card-project { max-width: 900px; background-color: var(--card-bg); border: 1px solid var(--bs-border-color); }
-        .custom-table-container { background-color: var(--table-custom-bg); border: 1px solid var(--bs-border-color); }
-        .table-title-input { font-size: 1.25rem; color: #0dcaf0 !important; font-weight: bold; }
+
+        .card-project {
+            max-width: 900px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--bs-border-color);
+        }
+
+        .custom-table-container {
+            background-color: var(--table-custom-bg);
+            border: 1px solid var(--bs-border-color);
+        }
+
+        /* Focus des champs */
+        .form-control:focus {
+            border-color: #0dcaf0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+        }
+
+        .table-title-input {
+            font-size: 1.25rem;
+            color: #0dcaf0 !important;
+            font-weight: bold;
+        }
+
+        /* Transition fluide pour le changement de thème */
         * { transition: background-color 0.2s ease, color 0.1s ease; }
     </style>
 </head>
 <body class="p-4">
 <div class="container">
 
-    {{-- BARRE DE NAVIGATION --}}
     <nav class="navbar mb-4">
         <div class="container-fluid p-0">
             <h1 class="navbar-brand text-info fw-bold m-0 fs-2">Suivi de projet</h1>
@@ -27,7 +57,6 @@
         </div>
     </nav>
 
-    {{-- MENU LATÉRAL --}}
     <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title text-info">Menu</h5>
@@ -39,16 +68,21 @@
                     @csrf
                     <button type="submit" class="btn btn-primary w-100">+ Nouveau projet</button>
                 </form>
+
                 @if(auth()->check() && auth()->user()->isAdmin())
                     <a href="{{ route('dashboard') }}" class="btn btn-warning w-100">Tableau de bord</a>
                 @endif
+
                 <hr>
+
                 <div class="mb-3 text-center">
+                    <label class="form-label small text-uppercase fw-bold opacity-50">Apparence</label>
                     <div class="btn-group w-100 shadow-sm">
                         <button class="btn btn-outline-secondary" onclick="setTheme('light')">Clair</button>
                         <button class="btn btn-outline-info" onclick="setTheme('dark')">Sombre</button>
                     </div>
                 </div>
+
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-outline-danger w-100">Déconnexion</button>
@@ -58,17 +92,21 @@
     </div>
 
     @if (session('status'))
-        <div id="flash-message" class="alert alert-success shadow-sm">{{ session('status') }}</div>
+        <div id="flash-message" class="alert alert-success shadow-sm">
+            {{ session('status') }}
+        </div>
     @endif
 
-    {{-- BOUCLE DES PROJETS --}}
     @foreach($projects as $project)
         <div class="mb-5 p-4 rounded mx-auto card-project shadow-lg">
 
-            {{-- 1. OPTIONS DU DOSSIER --}}
             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <h3 class="h6 m-0 text-uppercase text-secondary fw-bold">Options</h3>
+                <h3 class="h6 m-0 text-uppercase text-secondary fw-bold">Options du dossier</h3>
                 <div class="d-flex gap-2">
+                    <form action="{{ route('task-templates.publish-single', $project) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-info">+ Roadmap</button>
+                    </form>
                     <form action="{{ route('table.addFixed', $project) }}" method="POST">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-outline-success">+ Fixes</button>
@@ -82,33 +120,32 @@
 
             <form action="{{ route('project.save', $project) }}" method="POST">
                 @csrf
-
-                {{-- NOM DU CLIENT --}}
                 <div class="mb-4">
                     <label class="form-label text-success fw-bold small text-uppercase">Client / Entreprise</label>
                     <input type="text" name="client" class="form-control" value="{{ $project->client }}">
                 </div>
 
-                {{-- 2. ROADMAP (ÉTAPES DE PRODUCTION) --}}
-                @if($project->tasks->count() > 0)
-                    <h5 class="mb-2 small text-uppercase opacity-75">Roadmap de Production</h5>
+                {{--  ROADMAP GLOBALE  --}}
+                @php $roadmapTasks = $project->tasks->where('is_roadmap', true); @endphp
+                @if($roadmapTasks->isNotEmpty())
+                    <h5 class="mb-2 small text-uppercase opacity-75 text-info">Roadmap de production</h5>
                     <table class="table table-bordered align-middle mb-4 shadow-sm">
                         <thead class="table-light">
                             <tr>
-                                <th>Étape</th>
+                                <th>Tâche</th>
                                 <th class="text-center" style="width: 80px;">À faire</th>
                                 <th class="text-center" style="width: 80px;">Fait</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($project->tasks->sortBy('position') as $task)
+                            @foreach($roadmapTasks->sortBy('position') as $task)
                                 <tr>
                                     <td>{{ $task->label }}</td>
                                     <td class="text-center">
-                                        <input type="checkbox" name="todo[{{ $task->id }}]" class="form-check-input" {{ $task->todo ? 'checked' : '' }}>
+                                        <input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}>
                                     </td>
                                     <td class="text-center">
-                                        <input type="checkbox" name="done[{{ $task->id }}]" class="form-check-input" {{ $task->done ? 'checked' : '' }}>
+                                        <input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}>
                                     </td>
                                 </tr>
                             @endforeach
@@ -116,22 +153,56 @@
                     </table>
                 @endif
 
-                {{-- 3. TABLEAUX PERSONNALISÉS --}}
+                {{--  ÉTAPES FIXES  --}}
+                @php $fixedTasks = $project->tasks->where('is_roadmap', false); @endphp
+                @if($fixedTasks->isNotEmpty())
+                    <h5 class="mb-2 small text-uppercase opacity-75 text-success">Étapes Fixes</h5>
+                    <table class="table table-bordered align-middle mb-4 shadow-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tâche</th>
+                                <th class="text-center" style="width: 80px;">À faire</th>
+                                <th class="text-center" style="width: 80px;">Fait</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($fixedTasks as $task)
+                                <tr>
+                                    <td>{{ $task->label }}</td>
+                                    <td class="text-center">
+                                        <input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                {{-- TABLEAUX PERSONNALISÉS  --}}
                 @foreach($project->tables as $table)
-                    <div class="mt-4 p-3 rounded custom-table-container shadow-sm">
+                    <div class="mt-4 p-3 rounded custom-table-container shadow-sm mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <input type="text" name="table_name[{{ $table->id }}]" value="{{ $table->name }}" class="form-control bg-transparent border-0 table-title-input w-50">
+                            <input type="text" name="table_name[{{ $table->id }}]" value="{{ $table->name }}"
+                                   class="form-control bg-transparent border-0 table-title-input w-50">
+
                             <div class="btn-group">
                                 <a href="{{ route('column.add', [$table, 'string']) }}" class="btn btn-sm btn-outline-info">+ Texte</a>
                                 <a href="{{ route('column.add', [$table, 'checkbox']) }}" class="btn btn-sm btn-outline-warning">+ Checkbox</a>
                             </div>
                         </div>
+
                         <div class="table-responsive">
                             <table class="table table-bordered m-0 align-middle">
-                                <thead>
+                                <thead class="table-secondary bg-opacity-10">
                                     <tr>
                                         @foreach($table->columns as $column)
-                                            <th class="p-0"><input type="text" name="col_name[{{ $column->id }}]" value="{{ $column->name }}" class="form-control form-control-sm bg-transparent border-0 text-center fw-bold py-2 shadow-none"></th>
+                                            <th class="p-0 border-bottom-0">
+                                                <input type="text" name="col_name[{{ $column->id }}]" value="{{ $column->name }}"
+                                                       class="form-control form-control-sm bg-transparent border-0 text-center fw-bold py-2 shadow-none" style="color: #000000">
+                                            </th>
                                         @endforeach
                                     </tr>
                                 </thead>
@@ -143,9 +214,12 @@
                                                 <td class="text-center p-1">
                                                     @if($column->type == 'checkbox')
                                                         <input type="hidden" name="cells[{{ $column->id }}][{{ $i }}]" value="0">
-                                                        <input type="checkbox" name="cells[{{ $column->id }}][{{ $i }}]" value="1" class="form-check-input" {{ ($cell && $cell->value == '1') ? 'checked' : '' }}>
+                                                        <input type="checkbox" name="cells[{{ $column->id }}][{{ $i }}]" value="1"
+                                                               class="form-check-input" {{ ($cell && $cell->value == '1') ? 'checked' : '' }}>
                                                     @else
-                                                        <input type="text" name="cells[{{ $column->id }}][{{ $i }}]" value="{{ $cell->value ?? '' }}" class="form-control form-control-sm bg-transparent border-0 shadow-none text-center">
+                                                        <input type="text" name="cells[{{ $column->id }}][{{ $i }}]"
+                                                               value="{{ $cell->value ?? '' }}"
+                                                               class="form-control form-control-sm bg-transparent border-0 shadow-none text-center">
                                                     @endif
                                                 </td>
                                             @endforeach
@@ -154,26 +228,82 @@
                                 </tbody>
                             </table>
                         </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <a href="{{ route('row.add', $table) }}" class="btn btn-xs text-success border-0 small">+ Ligne</a>
+                            @if(auth()->user()->isAdmin())
+                                <button type="button" class="btn btn-xs text-danger border-0 small delete-table-btn" data-url="{{ route('table.destroy', $table) }}">
+                                    Supprimer tableau
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @endforeach
 
-                {{-- BOUTONS DE VALIDATION --}}
                 <div class="d-flex justify-content-end mt-4 gap-2">
-                    <button type="submit" class="btn btn-success px-5 fw-bold shadow">ENREGISTRER</button>
+                    @if(auth()->user() && auth()->user()->isAdmin())
+                        <button type="button" class="btn btn-outline-danger btn-sm delete-btn" data-action="{{ route('project.destroy', $project) }}">
+                            Supprimer Dossier
+                        </button>
+                    @endif
+                    <button type="submit" class="btn btn-success px-5 fw-bold shadow">ENREGISTRER TOUT</button>
                 </div>
             </form>
         </div>
     @endforeach
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    function setTheme(theme) { document.documentElement.setAttribute('data-bs-theme', theme); localStorage.setItem('theme', theme); }
+    // GESTION DU THÈME
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
+
+    // LOGIQUE DES PROJETS
+    document.addEventListener('DOMContentLoaded', function () {
+        const genericForm = document.getElementById('delete-generic-form');
+
+        // Suppressions
+        document.querySelectorAll('.delete-btn, .delete-table-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const msg = this.classList.contains('delete-btn') ? 'Supprimer tout le dossier ?' : 'Supprimer ce tableau ?';
+                if (confirm(msg)) {
+                    genericForm.action = this.dataset.action || this.dataset.url;
+                    genericForm.submit();
+                }
+            });
+        });
+
+        // Sync Checkboxes Fixes
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const todo = row.querySelector('.todo-checkbox');
+            const done = row.querySelector('.done-checkbox');
+            if (todo && done) {
+                const sync = () => {
+                    todo.disabled = done.checked;
+                    if (done.checked) todo.checked = false;
+                };
+                done.addEventListener('change', sync);
+                sync();
+            }
+        });
+
+        // Flash Messages
+        const flash = document.getElementById('flash-message');
+        if (flash) setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 3000);
+    });
 </script>
+
+<form id="delete-generic-form" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
 </body>
 </html>

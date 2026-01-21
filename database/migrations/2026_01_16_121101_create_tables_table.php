@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('tables', function (Blueprint $table) {
             $table->id();
     $table->foreignId('project_id')->constrained()->onDelete('cascade');
-    $table->string('name')->default('Nouveau Tableau'); // Remplace title par name
-    $table->integer('rows_count')->default(3); // N'oublie pas cette ligne pour le bouton + Ligne
+    $table->string('name')->default('Nouveau Tableau');
+    $table->integer('rows_count')->default(3);
     $table->timestamps();
         });
     }

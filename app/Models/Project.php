@@ -19,4 +19,11 @@ class Project extends Model
     public function tables() {
     return $this->hasMany(Table::class);
 }
+
+public function roadmap()
+{
+    return $this->belongsToMany(TaskTemplate::class, 'project_task_template')
+                ->withPivot('id', 'todo', 'done')
+                ->withTimestamps();
+}
 }
