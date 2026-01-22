@@ -98,159 +98,167 @@
     @endif
 
     @foreach($projects as $project)
-        <div class="mb-5 p-4 rounded mx-auto card-project shadow-lg">
+<div class="mb-5 p-4 rounded mx-auto card-project shadow-lg">
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+        <h3 class="h6 m-0 text-uppercase text-secondary fw-bold">Options du dossier</h3>
+        <div class="d-flex gap-2">
+            <form action="{{ route('task-templates.publish-single', $project) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-info">+ Roadmap</button>
+            </form>
+           {{--  <form action="{{ route('table.addFixed', $project) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-success">+ Fixes</button>
+            </form> --}}
+            <form action="{{ route('table.addCustom', $project) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-primary">+ Vide</button>
+            </form>
+        </div>
+    </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <h3 class="h6 m-0 text-uppercase text-secondary fw-bold">Options du dossier</h3>
-                <div class="d-flex gap-2">
-                    <form action="{{ route('task-templates.publish-single', $project) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-info">+ Roadmap</button>
-                    </form>
-                    <form action="{{ route('table.addFixed', $project) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-success">+ Fixes</button>
-                    </form>
-                    <form action="{{ route('table.addCustom', $project) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-primary">+ Vide</button>
-                    </form>
+    <form action="{{ route('project.save', $project) }}" method="POST">
+        @csrf
+        <div class="mb-4">
+            <label class="form-label text-success fw-bold small text-uppercase">Client / Entreprise</label>
+            <input type="text" name="client" class="form-control" value="{{ $project->client }}">
+        </div>
+
+        {{-- ROADMAP  --}}
+@php $roadmapTasks = $project->tasks->where('is_roadmap', true)->sortBy('position'); @endphp
+@if($roadmapTasks->isNotEmpty())
+    <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
+        <h5 class="small text-uppercase opacity-75 text-info m-0 fw-bold">Roadmap de production</h5>
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('project.addTask', [$project, 'type' => 'roadmap']) }}" class="btn btn-xs btn-outline-info" style="font-size: 0.7rem;">+ Ajouter étape roadmap</a>
+        @endif
+    </div>
+    <table class="table table-bordered align-middle mb-2 shadow-sm">
+        <thead class="table-light">
+            <tr class="small text-uppercase">
+                <th style="width: 50px;" class="text-center">Ordre</th>
+                <th>Tâche</th>
+                <th class="text-center" style="width: 70px;">À faire</th>
+                <th class="text-center" style="width: 70px;">Fait</th>
+                <th style="width: 40px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($roadmapTasks as $task)
+                <tr>
+                    <td class="p-0"><input type="number" name="task_pos[{{ $task->id }}]" value="{{ $task->position }}" class="form-control form-control-sm border-0 bg-transparent text-center shadow-none"></td>
+                    <td class="p-0"><input type="text" name="task_label[{{ $task->id }}]" value="{{ $task->label }}" class="form-control form-control-sm border-0 bg-transparent shadow-none"></td>
+                    <td class="text-center"><input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}></td>
+                    <td class="text-center"><input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}></td>
+                    <td class="text-center">
+                        <a href="{{ route('project.deleteTask', $task) }}" class="text-danger opacity-50 hover-opacity-100" onclick="return confirm('Supprimer cette ligne ?')">×</a>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ route('project.deleteType', [$project, 'type' => 'roadmap']) }}" class="btn btn-xs text-danger border-0 small delete-table-btn" onclick="return confirm('Supprimer toute la roadmap ?')">Supprimer la roadmap</a>
+    </div>
+@endif
+
+{{-- ÉTAPES FIXES
+@php $fixedTasks = $project->tasks->where('is_roadmap', false)->sortBy('position'); @endphp
+@if($fixedTasks->isNotEmpty())
+    <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
+        <h5 class="small text-uppercase opacity-75 text-success m-0 fw-bold">Étapes de base & Production</h5>
+        <a href="{{ route('project.addTask', [$project, 'type' => 'fixed']) }}" class="btn btn-xs btn-outline-success" style="font-size: 0.7rem;">+ Ajouter ligne fixe</a>
+    </div>
+    <table class="table table-bordered align-middle mb-2 shadow-sm">
+        <thead class="table-light">
+            <tr class="small text-uppercase">
+                <th style="width: 50px;" class="text-center">Ordre</th>
+                <th>Tâche</th>
+                <th class="text-center" style="width: 70px;">À faire</th>
+                <th class="text-center" style="width: 70px;">Fait</th>
+                <th style="width: 40px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($fixedTasks as $task)
+                <tr>
+                    <td class="p-0"><input type="number" name="task_pos[{{ $task->id }}]" value="{{ $task->position }}" class="form-control form-control-sm border-0 bg-transparent text-center shadow-none"></td>
+                    <td class="p-0"><input type="text" name="task_label[{{ $task->id }}]" value="{{ $task->label }}" class="form-control form-control-sm border-0 bg-transparent shadow-none"></td>
+                    <td class="text-center"><input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}></td>
+                    <td class="text-center"><input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}></td>
+                    <td class="text-center">
+                        <a href="{{ route('project.deleteTask', $task) }}" class="text-danger opacity-50" onclick="return confirm('Supprimer cette ligne ?')">×</a>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ route('project.deleteType', [$project, 'type' => 'fixed']) }}" class="btn btn-link btn-sm text-danger text-decoration-none opacity-50 small" onclick="return confirm('Supprimer toutes les étapes fixes ?')">Supprimer les étapes fixes</a>
+    </div>
+@endif--}}
+
+        {{--TABLEAUX PERSONNALISÉS --}}
+        @foreach($project->tables as $table)
+            <div class="mt-4 p-3 rounded custom-table-container shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <input type="text" name="table_name[{{ $table->id }}]" value="{{ $table->name }}" class="form-control bg-transparent border-0 table-title-input w-50">
+                    <div class="btn-group">
+                        <a href="{{ route('column.add', [$table, 'string']) }}" class="btn btn-sm btn-outline-info">+ Texte</a>
+                        <a href="{{ route('column.add', [$table, 'checkbox']) }}" class="btn btn-sm btn-outline-warning">+ Checkbox</a>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered m-0 align-middle">
+                        <thead>
+                            <tr>
+                                @foreach($table->columns as $column)
+                                    <th class="p-0 border-bottom-0" style="background-color: #000000;">
+                                        <input type="text" name="col_name[{{ $column->id }}]" value="{{ $column->name }}"
+                                               class="form-control form-control-sm border-0 text-center fw-bold py-2 shadow-none"
+                                               style="background-color: #000000; color: #ffffff;">
+                                    </th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for($i = 0; $i < ($table->rows_count ?? 3); $i++)
+                                <tr>
+                                    @foreach($table->columns as $column)
+                                        @php $cell = $column->cells()->where('row_index', $i)->first(); @endphp
+                                        <td class="text-center p-1">
+                                            @if($column->type == 'checkbox')
+                                                <input type="hidden" name="cells[{{ $column->id }}][{{ $i }}]" value="0">
+                                                <input type="checkbox" name="cells[{{ $column->id }}][{{ $i }}]" value="1" class="form-check-input" {{ ($cell && $cell->value == '1') ? 'checked' : '' }}>
+                                            @else
+                                                <input type="text" name="cells[{{ $column->id }}][{{ $i }}]" value="{{ $cell->value ?? '' }}" class="form-control form-control-sm bg-transparent border-0 shadow-none text-center">
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{{ route('row.add', $table) }}" class="btn btn-xs text-success border-0 small">+ Ligne</a>
+                    <button type="button" class="btn btn-xs text-danger border-0 small delete-table-btn" data-url="{{ route('table.destroy', $table) }}">Supprimer</button>
                 </div>
             </div>
+        @endforeach
 
-            <form action="{{ route('project.save', $project) }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="form-label text-success fw-bold small text-uppercase">Client / Entreprise</label>
-                    <input type="text" name="client" class="form-control" value="{{ $project->client }}">
-                </div>
-
-                {{--  ROADMAP GLOBALE  --}}
-                @php $roadmapTasks = $project->tasks->where('is_roadmap', true); @endphp
-                @if($roadmapTasks->isNotEmpty())
-                    <h5 class="mb-2 small text-uppercase opacity-75 text-info">Roadmap de production</h5>
-                    <table class="table table-bordered align-middle mb-4 shadow-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Tâche</th>
-                                <th class="text-center" style="width: 80px;">À faire</th>
-                                <th class="text-center" style="width: 80px;">Fait</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($roadmapTasks->sortBy('position') as $task)
-                                <tr>
-                                    <td>{{ $task->label }}</td>
-                                    <td class="text-center">
-                                        <input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}>
-                                    </td>
-                                    <td class="text-center">
-                                        <input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
-
-                {{--  ÉTAPES FIXES  --}}
-                @php $fixedTasks = $project->tasks->where('is_roadmap', false); @endphp
-                @if($fixedTasks->isNotEmpty())
-                    <h5 class="mb-2 small text-uppercase opacity-75 text-success">Étapes Fixes</h5>
-                    <table class="table table-bordered align-middle mb-4 shadow-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Tâche</th>
-                                <th class="text-center" style="width: 80px;">À faire</th>
-                                <th class="text-center" style="width: 80px;">Fait</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($fixedTasks as $task)
-                                <tr>
-                                    <td>{{ $task->label }}</td>
-                                    <td class="text-center">
-                                        <input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}>
-                                    </td>
-                                    <td class="text-center">
-                                        <input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
-
-                {{-- TABLEAUX PERSONNALISÉS  --}}
-                @foreach($project->tables as $table)
-                    <div class="mt-4 p-3 rounded custom-table-container shadow-sm mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <input type="text" name="table_name[{{ $table->id }}]" value="{{ $table->name }}"
-                                   class="form-control bg-transparent border-0 table-title-input w-50">
-
-                            <div class="btn-group">
-                                <a href="{{ route('column.add', [$table, 'string']) }}" class="btn btn-sm btn-outline-info">+ Texte</a>
-                                <a href="{{ route('column.add', [$table, 'checkbox']) }}" class="btn btn-sm btn-outline-warning">+ Checkbox</a>
-                            </div>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-bordered m-0 align-middle">
-                                <thead class="table-secondary bg-opacity-10">
-                                    <tr>
-                                        @foreach($table->columns as $column)
-                                            <th class="p-0 border-bottom-0">
-                                                <input type="text" name="col_name[{{ $column->id }}]" value="{{ $column->name }}"
-                                                       class="form-control form-control-sm bg-transparent border-0 text-center fw-bold py-2 shadow-none" style="color: #000000">
-                                            </th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @for($i = 0; $i < ($table->rows_count ?? 3); $i++)
-                                        <tr>
-                                            @foreach($table->columns as $column)
-                                                @php $cell = $column->cells()->where('row_index', $i)->first(); @endphp
-                                                <td class="text-center p-1">
-                                                    @if($column->type == 'checkbox')
-                                                        <input type="hidden" name="cells[{{ $column->id }}][{{ $i }}]" value="0">
-                                                        <input type="checkbox" name="cells[{{ $column->id }}][{{ $i }}]" value="1"
-                                                               class="form-check-input" {{ ($cell && $cell->value == '1') ? 'checked' : '' }}>
-                                                    @else
-                                                        <input type="text" name="cells[{{ $column->id }}][{{ $i }}]"
-                                                               value="{{ $cell->value ?? '' }}"
-                                                               class="form-control form-control-sm bg-transparent border-0 shadow-none text-center">
-                                                    @endif
-                                                </td>
-                                            @endforeach
-                                        </tr>
-                                    @endfor
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="d-flex justify-content-between mt-3">
-                            <a href="{{ route('row.add', $table) }}" class="btn btn-xs text-success border-0 small">+ Ligne</a>
-                            @if(auth()->user()->isAdmin())
-                                <button type="button" class="btn btn-xs text-danger border-0 small delete-table-btn" data-url="{{ route('table.destroy', $table) }}">
-                                    Supprimer tableau
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-
-                <div class="d-flex justify-content-end mt-4 gap-2">
+        <div class="d-flex justify-content-end mt-4 gap-2">
                     @if(auth()->user() && auth()->user()->isAdmin())
                         <button type="button" class="btn btn-outline-danger btn-sm delete-btn" data-action="{{ route('project.destroy', $project) }}">
                             Supprimer Dossier
                         </button>
                     @endif
-                    <button type="submit" class="btn btn-success px-5 fw-bold shadow">ENREGISTRER TOUT</button>
+                    <button type="submit" class="btn btn-outline-success px-5 fw-bold shadow">ENREGISTRER</button>
                 </div>
             </form>
         </div>
     @endforeach
+
 
 </div>
 

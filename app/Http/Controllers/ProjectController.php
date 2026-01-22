@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\Table;
 use App\Models\Cell;
 use App\Models\Column;
+use App\Models\TaskTemplate;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -85,6 +86,43 @@ class ProjectController extends Controller
         return back();
     }
 
+    public function addTask(Project $project, Request $request){
+        $isRoadmap = ($request->query('type')=== 'roadmap');
+        $lastPos = $project->tasks()->where('is_roadmap', $isRoadmap)->max('position')?? 0;
+
+        $project->tasks()->create([
+            'label'=>$isRoadmap ? 'Nouvelle étape Roadmap' : 'Nouvelle étape fixe',
+            'position'=>$lastPos + 1,
+            'is_roadmap'=>$isRoadmap,
+            'todo'=> true,
+            'done'=> false
+        ]);
+        return back()->with('status', 'Ligne ajoutée avec succés');
+    }
+
+    public function addFixed(Project $project) {
+    // 1. On récupère les templates de base (ceux qui ne sont pas dans la roadmap)
+    $templates = TaskTemplate::where('is_roadmap', false)->orderBy('position')->get();
+
+    // 2. On récupère AUSSI les templates de la roadmap actuelle
+    $roadmapTemplates = TaskTemplate::where('is_roadmap', true)->orderBy('position')->get();
+
+    $pos=1;
+    // 3. On crée les tâches pour le projet (toutes en is_roadmap = false pour ce tableau)
+    foreach ($templates->concat($roadmapTemplates) as $template) {
+        $project->tasks()->create([
+            'label' => $template->label,
+            'position' => $template->position ?: $pos,
+            'is_roadmap' => false, // On les met dans le tableau fixe du projet
+            'todo' => true,
+            'done' => false
+        ]);
+        $pos +=1;
+    }
+
+    return back()->with('status', 'Tableau de base chargé');
+}
+
     // SAUVEGARDE GLOBALE (Tâches + Tableaux + Titres)
     public function save(Request $request, Project $project)
     {
@@ -118,22 +156,42 @@ class ProjectController extends Controller
             }
         }
 
+        if($request->has('task_label')){
+            foreach ($request->task_label as $id =>$label){
+                $project->tasks()->where('id',$id)->update([
+                    'label'=> $label,
+                    'position'=>$request->task_pos[$id] ?? 0,
+                    'todo' => isset($request->todo[$id]),
+                    'done'=> isset($request->done[$id]),
+                ]);
+            }
+
+            if($request->has('task_pos')){
+                foreach ($request->task_pos as $taskId=>$position){
+                    $project->tasks()->where('id', $taskId)->update([
+                        'position'=>$position,
+                        'label' => $request->task_label[$taskId]
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('project.index')->with('status', 'Toutes les modifications ont été enregistrées !');
     }
 
     public function publishRoadmap(Project $project)
 {
-    // 1. On récupère les modèles d'étapes
+    // On récupère les modèles d'étapes
     $templates = \App\Models\TaskTemplate::orderBy('position')->get();
 
-    // 2. On crée des tâches INDIVIDUELLES marquées "is_roadmap"
+    // On crée des tâches INDIVIDUELLES marquées "is_roadmap"
     foreach ($templates as $tmpl) {
         $project->tasks()->create([
             'label'      => $tmpl->label,
             'position'   => $tmpl->position,
             'todo'       => true,
             'done'       => false,
-            'is_roadmap' => true, // <--- C'est ici que la séparation se fait
+            'is_roadmap' => true,
         ]);
     }
 
@@ -179,10 +237,39 @@ class ProjectController extends Controller
     // Suppression complète du projet
     public function destroy(Project $project)
     {
-        // Les relations (tasks, tables) seront supprimées par "cascade" si tes migrations sont bien faites
+
         $project->delete();
         return redirect()->route('project.index')->with('status', 'Projet supprimé.');
     }
+public function deleteRoadmap(Project $project)
+{
+    $project->tasks()->where('is_roadmap', true)->delete();
+    return back()->with('status', 'Roadmap supprimée');
+}
 
+public function deleteFixedTasks(Project $project)
+{
+    $project->tasks()->where('is_roadmap', false)->delete();
+    return back()->with('status', 'Étapes fixes supprimées');
+}
+
+// Supprimer une seule ligne
+public function deleteTask(Task $task) {
+    $projectId = $task->project_id;
+    $isRoadmap = $task->is_roadmap;
+    $task->delete();
+    $tasks = Task::where('project_id', $projectId)->where('is_roadmap', $isRoadmap)->orderBy('position')->get();
+    foreach($tasks as $index => $t){
+        $t->update(['position'=>($index+1)]);
+    }
+    return back()->with('status', 'Ligne supprimée');
+}
+
+// Vider une section entière
+public function deleteType(Project $project, $type) {
+    $isRoadmap = ($type === 'roadmap');
+    $project->tasks()->where('is_roadmap', $isRoadmap)->delete();
+    return back()->with('status', 'Section vidée');
+}
 
 }

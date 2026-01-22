@@ -39,7 +39,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/table/{table}/add-column/{type}', [ProjectController::class, 'addColumn'])->name('column.add');
 Route::get('/table/{table}/add-row', [ProjectController::class, 'addRow'])->name('row.add');
 Route::delete('/table/{table}', [ProjectController::class, 'destroyTable'])->name('table.destroy');
-Route::post('/project/{project}/add-fixed', [ProjectController::class, 'addFixedTable'])->name('table.addFixed');
+//Route::post('/project/{project}/add-fixed', [ProjectController::class, 'addFixedTable'])->name('table.addFixed');
 Route::post('/project/{project}/add-custom', [ProjectController::class, 'addCustomTable'])->name('table.addCustom');
 
 // Routes pour les Projets
@@ -95,6 +95,8 @@ Route::post('/task-templates/{id}/move-down', function ($id) {
     return back();
 })->name('task-templates.move-down');
 
+Route::get('/projects/{project}/add-task', [ProjectController::class, 'addTask'])->name('project.addTask');
+
 Route::delete('/task-templates/{template}', function (App\Models\TaskTemplate $template) {
     if (!auth()->user()->isAdmin()) abort(403);
     $template->delete();
@@ -121,7 +123,13 @@ Route::post('/task-templates/publish', [ProjectController::class, 'publish'])
 
     return back()->with('status', 'Roadmap ajoutée!');
 })->name('task-templates.publish-single');
+
+Route::delete('/project/{project}/roadmap', [ProjectController::class, 'deleteRoadmap'])->name('project.deleteRoadmap');
+Route::delete('/project/{project}/fixed-tasks', [ProjectController::class, 'deleteFixedTasks'])->name('project.deleteFixedTasks');
 });
+
+Route::get('/tasks/{task}/delete', [ProjectController::class, 'deleteTask'])->name('project.deleteTask');
+Route::get('/projects/{project}/tasks-clear/{type}', [ProjectController::class, 'deleteType'])->name('project.deleteType');
 
 // Auth (login, register, logout…)
 require __DIR__.'/auth.php';

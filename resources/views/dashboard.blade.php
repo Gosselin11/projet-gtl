@@ -55,19 +55,19 @@
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+              <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             @if(auth()->user()->isAdmin())
-            <div class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 shadow-sm sm:rounded-lg">
-                <h3 class="text-lg font-medium text-blue-900 dark:text-blue-100 mb-2">Actions de Synchronisation</h3>
+            {{--<div class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 shadow-sm sm:rounded-lg">
+                <h3 class="text-lg font-medium text-blue-900 dark:text-blue-100 mb-2">Actions de Synchronisation sur les projet existant</h3>
                 <p class="text-sm text-blue-700 dark:text-blue-300 mb-4">
                 </p>
                 <form action="{{ route('task-templates.publish') }}" method="POST" onsubmit="return confirm('Diffuser la roadmap à tous les projets ?');">
                     @csrf
                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700 shadow-sm transition">
-                        Envoyer la roadmap au suivi
+                        Envoyer la roadmap au projet
                     </button>
                 </form>
-            </div>
+            </div>--}}
             @endif
 
 
