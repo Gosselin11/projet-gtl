@@ -237,24 +237,64 @@ class ProjectController extends Controller
     // Suppression complète du projet
     public function destroy(Project $project)
     {
+        if (!auth()->user()->isAdmin()) {
+        abort(403, "Action non autorisée.");
+    }
 
         $project->delete();
         return redirect()->route('project.index')->with('status', 'Projet supprimé.');
     }
+
+    public function destroyColumn(\App\Models\Column $column)
+{
+    if (!auth()->user()->isAdmin()) abort(403);
+
+    $column->delete();
+    return back()->with('status', 'Colonne supprimée.');
+}
+
+public function destroyRow(\App\Models\Table $table, $index)
+{
+    if (!auth()->user()->isAdmin()) abort(403);
+
+    // Supprimer toutes les cellules appartenant à cette ligne (row_index)
+    foreach ($table->columns as $column) {
+        $column->cells()->where('row_index', $index)->delete();
+
+        // Décaler les index des lignes suivantes vers le haut pour boucher le trou
+        $column->cells()->where('row_index', '>', $index)->decrement('row_index');
+    }
+
+    // Diminuer le compteur de lignes du tableau s'il existe
+    if ($table->rows_count > 0) {
+        $table->decrement('rows_count');
+    }
+
+    return back()->with('status', 'Ligne supprimée.');
+}
 public function deleteRoadmap(Project $project)
 {
+    if (!auth()->user()->isAdmin()) {
+        abort(403, "Action non autorisée.");
+    }
     $project->tasks()->where('is_roadmap', true)->delete();
     return back()->with('status', 'Roadmap supprimée');
 }
 
 public function deleteFixedTasks(Project $project)
 {
+    if (!auth()->user()->isAdmin()) {
+        abort(403, "Action non autorisée.");
+    }
     $project->tasks()->where('is_roadmap', false)->delete();
     return back()->with('status', 'Étapes fixes supprimées');
 }
 
 // Supprimer une seule ligne
 public function deleteTask(Task $task) {
+    if (!auth()->user()->isAdmin()) {
+        abort(403, "Action non autorisée.");
+    }
     $projectId = $task->project_id;
     $isRoadmap = $task->is_roadmap;
     $task->delete();
@@ -267,6 +307,9 @@ public function deleteTask(Task $task) {
 
 // Vider une section entière
 public function deleteType(Project $project, $type) {
+    if (!auth()->user()->isAdmin()) {
+        abort(403, "Action non autorisée.");
+    }
     $isRoadmap = ($type === 'roadmap');
     $project->tasks()->where('is_roadmap', $isRoadmap)->delete();
     return back()->with('status', 'Section vidée');

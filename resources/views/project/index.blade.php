@@ -129,9 +129,9 @@
 @if($roadmapTasks->isNotEmpty())
     <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
         <h5 class="small text-uppercase opacity-75 text-info m-0 fw-bold">Roadmap de production</h5>
-        @if(auth()->user()->isAdmin())
+
             <a href="{{ route('project.addTask', [$project, 'type' => 'roadmap']) }}" class="btn btn-xs btn-outline-info" style="font-size: 0.7rem;">+ Ajouter étape roadmap</a>
-        @endif
+
     </div>
     <table class="table table-bordered align-middle mb-2 shadow-sm">
         <thead class="table-light">
@@ -140,7 +140,9 @@
                 <th>Tâche</th>
                 <th class="text-center" style="width: 70px;">À faire</th>
                 <th class="text-center" style="width: 70px;">Fait</th>
+                @if(auth()->user()->isAdmin())
                 <th style="width: 40px;"></th>
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -150,15 +152,24 @@
                     <td class="p-0"><input type="text" name="task_label[{{ $task->id }}]" value="{{ $task->label }}" class="form-control form-control-sm border-0 bg-transparent shadow-none"></td>
                     <td class="text-center"><input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}></td>
                     <td class="text-center"><input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}></td>
-                    <td class="text-center">
-                        <a href="{{ route('project.deleteTask', $task) }}" class="text-danger opacity-50 hover-opacity-100" onclick="return confirm('Supprimer cette ligne ?')">×</a>
-                    </td>
+
+                        @if(auth()->user()->isAdmin())
+            <td class="text-center">
+                <a href="{{ route('project.deleteTask', $task) }}"
+                   class="text-danger opacity-50 hover-opacity-100"
+                   onclick="return confirm('Supprimer cette ligne ?')">×</a>
+            </td>
+        @endif
+
+
                 </tr>
             @endforeach
         </tbody>
     </table>
     <div class="d-flex justify-content-end mb-4">
+        @if(auth()->user()->isAdmin())
         <a href="{{ route('project.deleteType', [$project, 'type' => 'roadmap']) }}" class="btn btn-xs text-danger border-0 small delete-table-btn" onclick="return confirm('Supprimer toute la roadmap ?')">Supprimer la roadmap</a>
+        @endif
     </div>
 @endif
 
@@ -209,16 +220,29 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-bordered m-0 align-middle">
+                    <table class="table table-bordered m-0 align-middle" style="table-layout:auto;">
                         <thead>
                             <tr>
                                 @foreach($table->columns as $column)
-                                    <th class="p-0 border-bottom-0" style="background-color: #000000;">
+                                    <th class="p-0 border-bottom-0 position-relative" style="background-color: #000000; @if($column->type == 'checkbox') width: 1%; white-space: nowrap; @endif">
+
+                                        {{-- Bouton supprimer colonne --}}
+                                        @if(auth()->user()->isAdmin())
+            <a href="{{ route('column.destroy', $column) }}"
+               class="position-absolute text-danger text-decoration-none fw-bold"
+               style="top: 0; left: 4px;  z-index: 20; font-size: 1.1rem; line-height: 1;"
+               onclick="return confirm('Supprimer cette colonne ?')">
+               &times;
+            </a>
+        @endif
                                         <input type="text" name="col_name[{{ $column->id }}]" value="{{ $column->name }}"
-                                               class="form-control form-control-sm border-0 text-center fw-bold py-2 shadow-none"
-                                               style="background-color: #000000; color: #ffffff;">
+               class="form-control form-control-sm border-0 text-center fw-bold pt-3 pb-2 shadow-none"
+               style="background-color: #000000; color: #ffffff; @if($column->type == 'checkbox') min-width: 60px; @else min-width: 150px; @endif">
                                     </th>
                                 @endforeach
+                                @if(auth()->user()->isAdmin())
+    <th style="width: 40px; background-color: #000000; border-bottom: none;"></th>
+@endif
                             </tr>
                         </thead>
                         <tbody>
@@ -235,6 +259,13 @@
                                             @endif
                                         </td>
                                     @endforeach
+                                    @if(auth()->user()->isAdmin())
+                    <td class="text-center p-0">
+                        <a href="{{ route('row.destroy', [$table, 'index' => $i]) }}"
+                           class="text-danger opacity-50 text-decoration-none fw-bold"
+                           onclick="return confirm('Supprimer cette ligne ?')">×</a>
+                    </td>
+                @endif
                                 </tr>
                             @endfor
                         </tbody>
@@ -242,7 +273,9 @@
                 </div>
                 <div class="d-flex justify-content-between mt-3">
                     <a href="{{ route('row.add', $table) }}" class="btn btn-xs text-success border-0 small">+ Ligne</a>
+                    @if(auth()->user()->isAdmin())
                     <button type="button" class="btn btn-xs text-danger border-0 small delete-table-btn" data-url="{{ route('table.destroy', $table) }}">Supprimer</button>
+                    @endif
                 </div>
             </div>
         @endforeach

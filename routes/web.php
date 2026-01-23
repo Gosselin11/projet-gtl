@@ -131,5 +131,11 @@ Route::delete('/project/{project}/fixed-tasks', [ProjectController::class, 'dele
 Route::get('/tasks/{task}/delete', [ProjectController::class, 'deleteTask'])->name('project.deleteTask');
 Route::get('/projects/{project}/tasks-clear/{type}', [ProjectController::class, 'deleteType'])->name('project.deleteType');
 
+// Suppression d'une colonne
+Route::get('/columns/{column}/delete', [ProjectController::class, 'destroyColumn'])->name('column.destroy');
+
+// Suppression d'une ligne
+Route::get('/tables/{table}/rows/{index}/delete', [ProjectController::class, 'destroyRow'])->name('row.destroy');
+
 // Auth (login, register, logout…)
 require __DIR__.'/auth.php';
