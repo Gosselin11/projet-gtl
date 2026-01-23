@@ -176,6 +176,18 @@ class ProjectController extends Controller
             }
         }
 
+        if ($request->has('status')){
+            foreach ($request->status as $taskId => $statusValue){
+                \App\Models\Task::where('id', $taskId)->update([
+                    'status' => $statusValue,
+                    'priority'=>$request->priority[$taskId] ?? 'Basse',
+                    'label'=>$request->task_label[$taskId],
+                    'position'=> $request->task_pos[$taskId],
+                    'note' => $request->task_note[$taskId],
+                ]);
+            }
+        }
+
         return redirect()->route('project.index')->with('status', 'Toutes les modifications ont été enregistrées !');
     }
 

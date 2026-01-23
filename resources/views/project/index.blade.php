@@ -137,9 +137,12 @@
         <thead class="table-light">
             <tr class="small text-uppercase">
                 <th style="width: 50px;" class="text-center">Ordre</th>
-                <th>Tâche</th>
-                <th class="text-center" style="width: 70px;">À faire</th>
-                <th class="text-center" style="width: 70px;">Fait</th>
+                <th style="width: 250px;">Tâche</th>
+                {{--  <th class="text-center" style="width: 70px;">À faire</th>
+                <th class="text-center" style="width: 70px;">Fait</th>--}}
+                <th class="text-center" style="width: 130px;">Priorité</th>
+                <th class="text-center" style="width: 140px;">Status</th>
+                <th>Note/Commentaire</th>
                 @if(auth()->user()->isAdmin())
                 <th style="width: 40px;"></th>
                 @endif
@@ -150,8 +153,30 @@
                 <tr>
                     <td class="p-0"><input type="number" name="task_pos[{{ $task->id }}]" value="{{ $task->position }}" class="form-control form-control-sm border-0 bg-transparent text-center shadow-none"></td>
                     <td class="p-0"><input type="text" name="task_label[{{ $task->id }}]" value="{{ $task->label }}" class="form-control form-control-sm border-0 bg-transparent shadow-none"></td>
-                    <td class="text-center"><input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}></td>
-                    <td class="text-center"><input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}></td>
+                    {{--  <td class="text-center"><input type="checkbox" name="todo[{{ $task->id }}]" class="todo-checkbox form-check-input" {{ $task->todo ? 'checked' : '' }}></td>
+                    <td class="text-center"><input type="checkbox" name="done[{{ $task->id }}]" class="done-checkbox form-check-input" {{ $task->done ? 'checked' : '' }}></td>--}}
+
+                    {{-- Colonne Priorité --}}
+                    <td class="p-1">
+                        <select name="priority[{{ $task->id }}]" class="form-select form-select-sm border-0 bg-light fw-bold" style="color:{{ $task->priority == 'Haute' ? '#dc3545' : ($task->priority == 'Moyenne' ? '#fd7e14' : '#6c757d') }};">
+                            <option value="Basse" {{ ($task->priority ?? 'Basse')=='Basse' ? 'selected' : '' }}>Basse</option>
+                            <option value="Moyenne" {{ $task->priority == 'Moyenne'?'selected':'' }}>Moyenne</option>
+                            <option value="Haute"{{ $task->priority=='Haute'?'selected':'' }}>Haute</option>
+                        </select>
+                    </td>
+
+                    {{-- Colonne Statut --}}
+                    <td class="p-1">
+                        <select name="status[{{ $task->id }}]" class="form-select form-select-sm fw-bold border-0 text-white" style="background-color: {{ $task->status == 'Terminé' ? '#198754': ($task->status == 'En cours' ? '#0dcaf0': ($task->status == 'Bloqué' ? '#dc3545' : '#6c757d')) }}">
+                            <option value="En attente" {{ $task->status == 'En attente' ? 'selected': '' }}>En attente</option>
+                            <option value="En cours"{{ $task->status == 'En cours' ? 'selected': ''}}>En cours</option>
+                            <option value="Bloqué" {{ $task->status == 'Bloqué' ? 'selected': '' }}>Bloqué</option>
+                            <option value="Terminé" {{ $task->status == 'Terminé' ? 'selected' : '' }}>Terminé</option>
+                        </select>
+                    </td>
+                    <td class="p-0">
+                        <input type="text" name="task_note[{{ $task->id }}]" value="{{ $task->note }}" placeholder="" class="form-control form-control-sm border-0 bg-transparent shadow-none" style="font-style: italic; font-size: 0.85rem;">
+                    </td>
 
                         @if(auth()->user()->isAdmin())
             <td class="text-center">

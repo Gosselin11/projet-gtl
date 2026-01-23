@@ -19,6 +19,11 @@ class Task extends Model
         'is_roadmap'
     ];
 
+    protected $attributes = [
+'priority' => 'Basse',
+'status' => 'En attente',
+    ];
+
     public function project()
     {
         return $this->belongsTo(Project::class);
